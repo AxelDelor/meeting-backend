@@ -7,6 +7,6 @@ import java.time.LocalDateTime;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    boolean existsByStartTime(LocalDateTime startTime);
+    boolean existsByRoomIdAndEndTimeGreaterThanAndStartTimeLessThan(Long RoomId, LocalDateTime newStart, LocalDateTime newEnd);
 
 }

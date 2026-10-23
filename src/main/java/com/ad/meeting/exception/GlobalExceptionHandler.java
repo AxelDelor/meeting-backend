@@ -22,9 +22,19 @@ import java.util.List;
 public class GlobalExceptionHandler {
 
 
-    @ExceptionHandler(RoomNotFoundException.class)
+    @ExceptionHandler({RoomNotFoundException.class, BookingNotFoundException.class})
     public ResponseEntity<ErrorResponse> handleNotFound(MeetingException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage(), List.of());
+        return buildResponse(HttpStatus.NOT_FOUND, ex.getMessage());
+    }
+
+    @ExceptionHandler(BookingConflictException.class)
+    public ResponseEntity<ErrorResponse> handleConflict(BookingConflictException ex) {
+        return buildResponse(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(InvalidBookingException.class)
+    public ResponseEntity<ErrorResponse> handleInvalidBooking(InvalidBookingException ex) {
+        return buildResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -34,35 +44,38 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleArgumentUnreadable(HttpMessageNotReadableException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body", List.of());
+        return buildResponse(HttpStatus.BAD_REQUEST, "Malformed request body");
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ErrorResponse> handleWrongTypeArgument(MethodArgumentTypeMismatchException ex) {
-        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid value for parameter " + ex.getName(), List.of());
+        return buildResponse(HttpStatus.BAD_REQUEST, "Invalid value for parameter " + ex.getName());
     }
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, "Method " + ex.getMethod() + " not supported", List.of());
+        return buildResponse(HttpStatus.METHOD_NOT_ALLOWED, "Method " + ex.getMethod() + " not supported");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex) {
-        return buildResponse(HttpStatus.NOT_FOUND, "Resource not found", List.of());
+        return buildResponse(HttpStatus.NOT_FOUND, "Resource not found");
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleOtherExceptions(Exception ex) {
         log.error("Unexpected error", ex);
-        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error", List.of());
+        return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
-
-
+    
     // Private
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, List<FieldValidationError> errors) {
-        ErrorResponse body = new ErrorResponse(message, status.value(), Instant.now(), errors);
+        ErrorResponse body = new ErrorResponse(status.value(), message, Instant.now(), errors);
         return ResponseEntity.status(status).body(body);
+    }
+
+    private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message) {
+        return buildResponse(status, message, List.of());
     }
 }
