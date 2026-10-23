@@ -1,8 +1,10 @@
 package com.ad.meeting.service;
 
+import com.ad.meeting.dto.BookingRequest;
 import com.ad.meeting.dto.BookingResponse;
 import com.ad.meeting.exception.RoomNotFoundException;
 import com.ad.meeting.model.Booking;
+import com.ad.meeting.model.Room;
 import com.ad.meeting.repository.BookingRepository;
 import com.ad.meeting.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final RoomRepository roomRepository;
-    
+
     @Transactional(readOnly = true)
     public List<BookingResponse> getRoomBookings(Long roomId) {
         if (!roomRepository.existsById(roomId)) {
@@ -31,4 +33,15 @@ public class BookingService {
     private BookingResponse bookingToResponse(Booking booking) {
         return new BookingResponse(booking.getId(), booking.getRoom().getId(), booking.getTitle(), booking.getOrganizer(), booking.getStartTime(), booking.getEndTime());
     }
+
+    private Booking requestToBooking(BookingRequest bookingRequest, Room room) {
+        return Booking.builder()
+                .room(room)
+                .title(bookingRequest.title())
+                .organizer(bookingRequest.organizer())
+                .startTime(bookingRequest.startTime())
+                .endTime(bookingRequest.endTime())
+                .build();
+    }
+
 }
