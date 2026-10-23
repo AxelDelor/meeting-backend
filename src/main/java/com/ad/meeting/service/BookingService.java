@@ -1,12 +1,14 @@
 package com.ad.meeting.service;
 
 import com.ad.meeting.dto.BookingResponse;
+import com.ad.meeting.exception.RoomNotFoundException;
 import com.ad.meeting.model.Booking;
 import com.ad.meeting.repository.BookingRepository;
+import com.ad.meeting.repository.RoomRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.awt.print.Book;
 import java.util.List;
 
 @Service
@@ -14,13 +16,14 @@ import java.util.List;
 public class BookingService {
 
     private final BookingRepository bookingRepository;
-
-    public List<BookingResponse> getBookings() {
-        List<Booking> bookings = bookingRepository.findAll();
-
-        return bookings.stream()
-                .map(this::bookingToResponse)
-                .toList();
+    private final RoomRepository roomRepository;
+    
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getRoomBookings(Long roomId) {
+        if (!roomRepository.existsById(roomId)) {
+            throw new RoomNotFoundException(roomId);
+        }
+        return bookingRepository.findByRoomId(roomId).stream().map(this::bookingToResponse).toList();
     }
 
     // Private
