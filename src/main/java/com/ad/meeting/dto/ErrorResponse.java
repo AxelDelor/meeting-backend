@@ -1,12 +1,12 @@
 package com.ad.meeting.dto;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
+import java.util.List;
 
 public record ErrorResponse(
+        Integer status,
         String message,
-        Integer errorNumber,
-        Instant timestamp
+        Instant timestamp,
+        List<FieldValidationError> errors
 ) {
 }
