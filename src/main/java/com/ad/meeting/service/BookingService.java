@@ -3,6 +3,7 @@ package com.ad.meeting.service;
 import com.ad.meeting.dto.BookingRequest;
 import com.ad.meeting.dto.BookingResponse;
 import com.ad.meeting.exception.BookingConflictException;
+import com.ad.meeting.exception.BookingNotFoundException;
 import com.ad.meeting.exception.InvalidBookingException;
 import com.ad.meeting.exception.RoomNotFoundException;
 import com.ad.meeting.model.Booking;
@@ -50,7 +51,7 @@ public class BookingService {
         }
 
 
-        if (Duration.between(startTime, endTime).toMinutes() > 240) {
+        if (Duration.ofHours(4).compareTo(Duration.between(startTime, endTime)) > 0) {
             throw new InvalidBookingException("The booking can't last more than 4 hours");
         }
 
@@ -66,6 +67,11 @@ public class BookingService {
 
         Booking booking = requestToBooking(bookingRequest, room);
         return bookingToResponse(bookingRepository.save(booking));
+    }
+
+    @Transactional
+    public void deleteBookingById(Long bookingId) {
+        bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
     }
 
     // Private
