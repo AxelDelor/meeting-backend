@@ -35,6 +35,13 @@ public class BookingService {
         return bookingRepository.findByRoomId(roomId).stream().map(this::bookingToResponse).toList();
     }
 
+    @Transactional(readOnly = true)
+    public BookingResponse getBooking(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
+        return bookingToResponse(booking);
+    }
+
+
     @Transactional
     public BookingResponse createBooking(BookingRequest bookingRequest) {
         LocalDateTime now = LocalDateTime.now(clock);
@@ -51,7 +58,7 @@ public class BookingService {
         }
 
 
-        if (Duration.ofHours(4).compareTo(Duration.between(startTime, endTime)) > 0) {
+        if (Duration.between(startTime, endTime).compareTo(Duration.ofHours(4)) > 0) {
             throw new InvalidBookingException("The booking can't last more than 4 hours");
         }
 
@@ -71,7 +78,8 @@ public class BookingService {
 
     @Transactional
     public void deleteBookingById(Long bookingId) {
-        bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
+        Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
+        bookingRepository.delete(booking);
     }
 
     // Private

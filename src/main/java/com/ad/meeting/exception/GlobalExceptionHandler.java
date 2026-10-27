@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
         log.error("Unexpected error", ex);
         return buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error");
     }
-    
+
     // Private
 
     private ResponseEntity<ErrorResponse> buildResponse(HttpStatus status, String message, List<FieldValidationError> errors) {
