@@ -1,11 +1,15 @@
 package com.ad.meeting.controller;
 
+import com.ad.meeting.dto.BookingRequest;
 import com.ad.meeting.dto.BookingResponse;
 import com.ad.meeting.service.BookingService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 
 @RestController
@@ -35,4 +39,19 @@ public class BookingController {
         bookingService.deleteBookingById(bookingId);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping
+    public ResponseEntity<BookingResponse> createBooking(@Valid @RequestBody BookingRequest bookingRequest) {
+        BookingResponse bookingCreated = bookingService.createBooking(bookingRequest);
+
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{bookingId}")
+                .buildAndExpand(bookingCreated.id())
+                .toUri();
+
+        return ResponseEntity.created(location).body(bookingCreated);
+
+    }
+
 }
