@@ -27,6 +27,12 @@ public class BookingService {
     private final RoomRepository roomRepository;
     private final Clock clock;
 
+
+    @Transactional(readOnly = true)
+    public List<BookingResponse> getBookings() {
+        return bookingRepository.findAll().stream().map(this::bookingToResponse).toList();
+    }
+
     @Transactional(readOnly = true)
     public List<BookingResponse> getRoomBookings(Long roomId) {
         if (!roomRepository.existsById(roomId)) {
@@ -40,8 +46,7 @@ public class BookingService {
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(() -> new BookingNotFoundException(bookingId));
         return bookingToResponse(booking);
     }
-
-
+    
     @Transactional
     public BookingResponse createBooking(BookingRequest bookingRequest) {
         LocalDateTime now = LocalDateTime.now(clock);

@@ -16,9 +16,13 @@ public class BookingController {
     private final BookingService bookingService;
 
     @GetMapping
+    public ResponseEntity<List<BookingResponse>> getBookings() {
+        return ResponseEntity.ok(bookingService.getBookings());
+    }
+
+    @GetMapping(params = "roomId")
     public ResponseEntity<List<BookingResponse>> getRoomBookings(@RequestParam Long roomId) {
-        List<BookingResponse> bookingsRead = bookingService.getRoomBookings(roomId);
-        return ResponseEntity.ok(bookingsRead);
+        return ResponseEntity.ok(bookingService.getRoomBookings(roomId));
     }
 
     @GetMapping("/{bookingId}")
