@@ -2,6 +2,8 @@ package com.ad.meeting.service;
 
 import com.ad.meeting.dto.BookingRequest;
 import com.ad.meeting.exception.InvalidBookingException;
+import com.ad.meeting.exception.RoomNotFoundException;
+import com.ad.meeting.model.Room;
 import com.ad.meeting.repository.BookingRepository;
 import com.ad.meeting.repository.RoomRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,7 +30,7 @@ public class BookingServiceTest {
     private BookingRepository bookingRepository;
 
 
-    //    Room room01;
+    Room room01;
     BookingService service;
     Clock clock;
 
@@ -40,11 +42,12 @@ public class BookingServiceTest {
 
         service = new BookingService(bookingRepository, roomRepository, clock);
 
-//        Room room01 = Room.builder()
-//                .name("103")
-//                .capacity(12)
-//                .floor("RDC")
-//                .build();
+        Room room01 = Room.builder()
+                .id(1L)
+                .name("103")
+                .capacity(12)
+                .floor("RDC")
+                .build();
     }
 
     @Test
@@ -82,6 +85,15 @@ public class BookingServiceTest {
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-10-29T08:00:00"), LocalDateTime.parse("2026-10-29T10:00:00"))));
 
         verifyNoInteractions(bookingRepository, roomRepository);
+        System.out.println(ex.getMessage());
+
+    }
+
+    @Test
+    void testRoomNotFound() {
+        RoomNotFoundException ex = assertThrows(RoomNotFoundException.class, () -> service.createBooking(new BookingRequest("test", "John Doe", 2L, LocalDateTime.parse("2026-11-29T08:00:00"), LocalDateTime.parse("2026-11-29T10:00:00"))));
+
+        verify(bookingRepository, never()).save(any());
         System.out.println(ex.getMessage());
 
     }
