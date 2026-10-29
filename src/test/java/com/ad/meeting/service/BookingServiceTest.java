@@ -16,9 +16,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class BookingServiceTest {
@@ -52,10 +50,46 @@ public class BookingServiceTest {
     @Test
     void testStartAfterEnd() {
 
-        assertThrows(InvalidBookingException.class, () -> service.createBooking(new BookingRequest("Test", "John Doe", 1L, LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
+        InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
 
-        verify(bookingRepository, never()).save(any());
+        verifyNoInteractions(bookingRepository);
+        System.out.println(ex.getMessage());
+    }
 
+    @Test
+    void testStartEqualEnd() {
+
+        InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T10:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
+
+        verifyNoInteractions(bookingRepository, roomRepository);
+        System.out.println(ex.getMessage());
+
+    }
+
+    @Test
+    void testDurationOver4() {
+
+        InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T15:01:00"))));
+
+        verifyNoInteractions(bookingRepository, roomRepository);
+        System.out.println(ex.getMessage());
+
+    }
+
+    @Test
+    void testBookingInThePast() {
+
+        InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-10-29T08:00:00"), LocalDateTime.parse("2026-10-29T10:00:00"))));
+
+        verifyNoInteractions(bookingRepository, roomRepository);
+        System.out.println(ex.getMessage());
+
+    }
+
+    // Private
+
+    private BookingRequest constructBookingRequest(LocalDateTime startTime, LocalDateTime endTime) {
+        return new BookingRequest("Test", "John Doe", 1L, startTime, endTime);
     }
 
 }
