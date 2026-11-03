@@ -1,6 +1,7 @@
 package com.ad.meeting.service;
 
 import com.ad.meeting.dto.BookingRequest;
+import com.ad.meeting.exception.BookingConflictException;
 import com.ad.meeting.exception.InvalidBookingException;
 import com.ad.meeting.exception.RoomNotFoundException;
 import com.ad.meeting.model.Room;
@@ -16,8 +17,9 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,7 +44,7 @@ public class BookingServiceTest {
 
         service = new BookingService(bookingRepository, roomRepository, clock);
 
-        Room room01 = Room.builder()
+        room01 = Room.builder()
                 .id(1L)
                 .name("103")
                 .capacity(12)
@@ -55,7 +57,7 @@ public class BookingServiceTest {
 
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
 
-        verifyNoInteractions(bookingRepository);
+        verifyNoInteractions(bookingRepository, roomRepository);
         System.out.println(ex.getMessage());
     }
 
@@ -93,9 +95,22 @@ public class BookingServiceTest {
     void testRoomNotFound() {
         RoomNotFoundException ex = assertThrows(RoomNotFoundException.class, () -> service.createBooking(new BookingRequest("test", "John Doe", 2L, LocalDateTime.parse("2026-11-29T08:00:00"), LocalDateTime.parse("2026-11-29T10:00:00"))));
 
-        verify(bookingRepository, never()).save(any());
+        verifyNoInteractions(bookingRepository);
         System.out.println(ex.getMessage());
 
+    }
+
+    @Test
+    void testBookingConflict() {
+
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
+
+        when(bookingRepository.existsByRoomIdAndEndTimeGreaterThanAndStartTimeLessThan(1L, LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))).thenReturn(true);
+
+        BookingConflictException ex = assertThrows(BookingConflictException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))));
+
+        verify(bookingRepository, never()).save(any());
+        System.out.println(ex.getMessage());
     }
 
     // Private
@@ -103,5 +118,6 @@ public class BookingServiceTest {
     private BookingRequest constructBookingRequest(LocalDateTime startTime, LocalDateTime endTime) {
         return new BookingRequest("Test", "John Doe", 1L, startTime, endTime);
     }
+
 
 }
