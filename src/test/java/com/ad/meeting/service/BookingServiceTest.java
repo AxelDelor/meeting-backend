@@ -1,15 +1,18 @@
 package com.ad.meeting.service;
 
 import com.ad.meeting.dto.BookingRequest;
+import com.ad.meeting.dto.BookingResponse;
 import com.ad.meeting.exception.BookingConflictException;
 import com.ad.meeting.exception.InvalidBookingException;
 import com.ad.meeting.exception.RoomNotFoundException;
+import com.ad.meeting.model.Booking;
 import com.ad.meeting.model.Room;
 import com.ad.meeting.repository.BookingRepository;
 import com.ad.meeting.repository.RoomRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -33,6 +36,7 @@ public class BookingServiceTest {
 
 
     Room room01;
+    Booking booking01;
     BookingService service;
     Clock clock;
 
@@ -49,6 +53,15 @@ public class BookingServiceTest {
                 .name("103")
                 .capacity(12)
                 .floor("RDC")
+                .build();
+
+        booking01 = Booking.builder()
+                .id(1L)
+                .room(room01)
+                .title("Test")
+                .organizer("John Doe")
+                .startTime(LocalDateTime.parse("2026-11-29T09:00:00"))
+                .endTime(LocalDateTime.parse("2026-11-29T11:00:00"))
                 .build();
     }
 
@@ -68,8 +81,6 @@ public class BookingServiceTest {
 
         verifyNoInteractions(bookingRepository, roomRepository);
         assertEquals("The start and the end of the booking are the same", ex.getMessage());
-
-
     }
 
     @Test
@@ -79,7 +90,16 @@ public class BookingServiceTest {
 
         verifyNoInteractions(bookingRepository, roomRepository);
         assertEquals("The booking can't last more than 4 hours", ex.getMessage());
+    }
 
+    @Test
+    void testDurationEquals4() {
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking01);
+
+        assertDoesNotThrow(() -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))));
+
+        verify(bookingRepository).save(any(Booking.class));
 
     }
 
@@ -115,10 +135,31 @@ public class BookingServiceTest {
     }
 
     @Test
-    void testBookingCreated() {
-        when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
-        assert(service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00")bookingRepository.findByRoomId(room01.getId()));
+    void testBookingCreatedAndReturned() {
+        ArgumentCaptor<Booking> captor = ArgumentCaptor.forClass(Booking.class);
 
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
+        when(bookingRepository.save(any(Booking.class))).thenReturn(booking01);
+
+        BookingResponse response = service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00")));
+
+        assertEquals(booking01.getId(), response.id());
+        assertEquals(booking01.getTitle(), response.title());
+        assertEquals(booking01.getRoom().getId(), response.roomId());
+        assertEquals(booking01.getOrganizer(), response.organizer());
+        assertEquals(booking01.getStartTime(), response.startTime());
+        assertEquals(booking01.getEndTime(), response.endTime());
+
+        verify(bookingRepository).save(captor.capture());
+
+        Booking sent = captor.getValue();
+
+        assertNull(sent.getId());
+        assertEquals(booking01.getTitle(), sent.getTitle());
+        assertEquals(booking01.getRoom(), sent.getRoom());
+        assertEquals(booking01.getOrganizer(), sent.getOrganizer());
+        assertEquals(booking01.getStartTime(), sent.getStartTime());
+        assertEquals(booking01.getEndTime(), sent.getEndTime());
     }
 
     // Private
