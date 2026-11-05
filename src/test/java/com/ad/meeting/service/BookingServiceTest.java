@@ -58,7 +58,7 @@ public class BookingServiceTest {
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
 
         verifyNoInteractions(bookingRepository, roomRepository);
-        System.out.println(ex.getMessage());
+        assertEquals("The start of the booking is after the end", ex.getMessage());
     }
 
     @Test
@@ -67,7 +67,8 @@ public class BookingServiceTest {
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T10:00:00"), LocalDateTime.parse("2026-12-12T10:00:00"))));
 
         verifyNoInteractions(bookingRepository, roomRepository);
-        System.out.println(ex.getMessage());
+        assertEquals("The start and the end of the booking are the same", ex.getMessage());
+
 
     }
 
@@ -77,7 +78,8 @@ public class BookingServiceTest {
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-12-12T11:00:00"), LocalDateTime.parse("2026-12-12T15:01:00"))));
 
         verifyNoInteractions(bookingRepository, roomRepository);
-        System.out.println(ex.getMessage());
+        assertEquals("The booking can't last more than 4 hours", ex.getMessage());
+
 
     }
 
@@ -87,7 +89,8 @@ public class BookingServiceTest {
         InvalidBookingException ex = assertThrows(InvalidBookingException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-10-29T08:00:00"), LocalDateTime.parse("2026-10-29T10:00:00"))));
 
         verifyNoInteractions(bookingRepository, roomRepository);
-        System.out.println(ex.getMessage());
+        assertEquals("The booking is scheduled in the past", ex.getMessage());
+
 
     }
 
@@ -96,21 +99,26 @@ public class BookingServiceTest {
         RoomNotFoundException ex = assertThrows(RoomNotFoundException.class, () -> service.createBooking(new BookingRequest("test", "John Doe", 2L, LocalDateTime.parse("2026-11-29T08:00:00"), LocalDateTime.parse("2026-11-29T10:00:00"))));
 
         verifyNoInteractions(bookingRepository);
-        System.out.println(ex.getMessage());
+        assertEquals("The room 2 has not been found", ex.getMessage());
 
     }
 
     @Test
     void testBookingConflict() {
-
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
-
         when(bookingRepository.existsByRoomIdAndEndTimeGreaterThanAndStartTimeLessThan(1L, LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))).thenReturn(true);
-
         BookingConflictException ex = assertThrows(BookingConflictException.class, () -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))));
 
         verify(bookingRepository, never()).save(any());
-        System.out.println(ex.getMessage());
+        assertEquals("The booking is overlapping on an existing booking", ex.getMessage());
+
+    }
+
+    @Test
+    void testBookingCreated() {
+        when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
+        assert(service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00")bookingRepository.findByRoomId(room01.getId()));
+
     }
 
     // Private
