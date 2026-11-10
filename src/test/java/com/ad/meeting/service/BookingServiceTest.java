@@ -97,7 +97,7 @@ public class BookingServiceTest {
         when(roomRepository.findById(1L)).thenReturn(Optional.of(room01));
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking01);
 
-        assertDoesNotThrow(() -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T11:00:00"))));
+        assertDoesNotThrow(() -> service.createBooking(constructBookingRequest(LocalDateTime.parse("2026-11-29T09:00:00"), LocalDateTime.parse("2026-11-29T13:00:00"))));
 
         verify(bookingRepository).save(any(Booking.class));
 
