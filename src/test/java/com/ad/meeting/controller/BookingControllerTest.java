@@ -9,13 +9,15 @@ import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 import java.time.LocalDateTime;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(BookingController.class)
 public class BookingControllerTest {
@@ -36,7 +38,10 @@ public class BookingControllerTest {
                         .content("""
                                 {"title": "Test Booking 1","organizer": "John Doe", "roomId": 1, "startTime": "2026-11-29T09:00:00", "endTime": "2026-11-29T11:00:00"}
                                 """))
-                .andExpect(status().isCreated());
+                .andDo(print())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", "http://localhost/bookings/1"))
+                .andExpect(jsonPath("$.id").value(1));
     }
 
 }
